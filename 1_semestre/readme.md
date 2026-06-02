@@ -229,7 +229,7 @@ todos os módulos: OK
 
 ## Link do Vídeo
 
-[link do vídeo no YouTube]
+[[link do vídeo no YouTube](https://youtu.be/Su2JB2KjFdw)]
 
 ---
 
