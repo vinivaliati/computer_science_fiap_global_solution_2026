@@ -8,9 +8,11 @@ Simulação de um sistema de monitoramento operacional para a Estação GB-1, um
 
 | Nome | RM |
 |------|----|
-| (nome do integrante) | (RM) |
-| (nome do integrante) | (RM) |
-| (nome do integrante) | (RM) |
+| Arthur Apolonio de Oliveira | rm571385
+| Matheus Bejarano da Costa Resende | rm569195
+| Dayvid Daniel Duarte Ramos | rm569482
+| Bryan Lima Garcia | rm573611
+| Vinicius Valiati Costa | rm568674
 
 ---
 
@@ -34,7 +36,7 @@ missao_gb/
 
 ## Resumo do Problema
 
-A Estação GB-1 opera em órbita baixa terrestre e depende de monitoramento contínuo para garantir a segurança da tripulação e a integridade dos equipamentos. Em ambientes onde a comunicação pode ser intermitente, o sistema precisa ser capaz de interpretar dados de sensores em tempo real, identificar anomalias, gerar alertas automáticos e recomendar ações corretivas sem intervenção humana imediata.
+A Estação GB-1 depende do monitoramento contínuo para garantir a segurança da tripulação e a integridade dos equipamentos. Em ambientes onde a comunicação pode ser intermitente, o sistema precisa ser capaz de interpretar dados de sensores em tempo real, identificar anomalias, gerar alertas automáticos e recomendar ações corretivas sem intervenção humana imediata.
 
 O sistema processa 1086 leituras de telemetria coletadas de janeiro a junho de 2026, em intervalos de 4 horas, cobrindo 6 módulos críticos e variáveis ambientais como temperatura, radiação e reserva de bateria.
 
@@ -90,8 +92,8 @@ Os últimos 6 registros do CSV (30/06/2026) foram editados manualmente para simu
 | Estrutura | Uso |
 |-----------|-----|
 | **Lista** | Séries temporais de geração solar, consumo, bateria, radiação e temperatura interna |
-| **Fila (FIFO)** | Alertas pendentes organizados por ordem de ocorrência — o mais antigo é processado primeiro |
-| **Pilha (LIFO)** | Eventos críticos analisados — o topo sempre contém o evento crítico mais recente |
+| **Fila** | Alertas pendentes organizados por ordem de ocorrência o mais antigo é processado primeiro |
+| **Pilha** | Eventos críticos analisados o topo sempre contém o evento crítico mais recente |
 | **Dicionário** | Estado atual de cada módulo, com nome, descrição, status booleano e total de falhas históricas |
 | **Hierarquia** | Estrutura aninhada representando a organização da missão em subsistemas de energia e habitat |
 | **Matriz (lista de listas)** | Leituras das últimas 24h organizadas por horário × variável |
@@ -105,7 +107,7 @@ Os últimos 6 registros do CSV (30/06/2026) foram editados manualmente para simu
 | Variável | Normal | Alerta | Crítico |
 |----------|--------|--------|---------|
 | Bateria | ≥ 25% | 15–24% | < 15% |
-| Radiação | ≤ 0.6 mSv/h | 0.6–1.0 | > 1.0 mSv/h |
+| Radiação | ≤ 0.6 mSv/h | 0.8–1.0 | > 1.0 mSv/h |
 | Temp. interna | 10–30°C | 5–10 ou 30–35°C | < 5°C ou > 35°C |
 | Geração solar | — | > 200 kWh (inconsistência) | — |
 
@@ -115,14 +117,12 @@ Os últimos 6 registros do CSV (30/06/2026) foram editados manualmente para simu
 CRITICO = (NOT oxigenio OR NOT energia OR NOT comunicacao
            OR NOT habitat OR NOT pressao OR NOT combustivel)
        OR (count_alertas >= 2)
-       OR (radiacao > 1.0 AND NOT comunicacao)
 ```
 
 ### Regras com Operadores Lógicos
 
 1. Qualquer módulo com `status = False` → **CRÍTICO** imediato
 2. `len(alertas) >= 2` → **CRÍTICO** por múltiplos alertas simultâneos
-3. `radiacao > 1.0 AND NOT comunicacao` → **CRÍTICO** por radiação crítica sem link com Terra
 
 ---
 
@@ -153,7 +153,7 @@ A média móvel suaviza as oscilações do ciclo solar antes da regressão, torn
 
 1. Clone o repositório:
 ```
-git clone https://github.com/seu-usuario/missao-gb
+git clone https://github.com/vinivaliati/computer_science_fiap_global_solution_2026/blob/main/1_semestre
 cd missao-gb
 ```
 
@@ -162,14 +162,14 @@ cd missao-gb
 cd data
 python dados.py
 ```
-Isso cria o `dados.csv` na mesma pasta.
+Isso cria o `dados.csv` na mesma pasta. Porem caso queiram ja subimos o nosso csv, ja que tem apenas 1086 linhas.
 
 3. Execute o sistema (executar na pasta raiz):
 ```
 python src/sistema.py
 ```
 
-**Requisitos:** Python 3.x — apenas bibliotecas padrão (`csv`, `os`)
+**Requisitos:** Python 3.x, apenas bibliotecas padrão (`csv`, `os`)
 
 ---
 
@@ -237,6 +237,6 @@ todos os módulos: OK
 
 O desenvolvimento do sistema de monitoramento da Missão GB permitiu aplicar de forma integrada os conceitos das três primeiras fases do curso: estruturas de dados, lógica booleana, algoritmos de busca e análise de dados.
 
-A principal dificuldade foi calibrar os dados simulados para que fossem realistas e ao mesmo tempo gerassem situações de alerta em uma frequência adequada — nem raras demais para não testar o sistema, nem frequentes demais para não trivializar o diagnóstico.
+A principal dificuldade foi calibrar os dados simulados para que fossem realistas e ao mesmo tempo gerassem situações de alerta em uma frequência adequada, nem raras demais para não testar o sistema, nem frequentes demais para não trivializar o diagnóstico.
 
-A combinação de média móvel com regressão linear mostrou-se mais eficaz do que a regressão direta sobre dados brutos, pois elimina o ruído do ciclo solar e revela a tendência real de consumo da bateria ao longo do tempo.
+Apesar de ser permitido o uso de bibliotecas externas, optamos por desenvolver a solução utilizando o máximo possível de Python "puro", com o objetivo de reforçar e consolidar nossos conhecimentos na linguagem.

@@ -69,12 +69,6 @@ def diagnosticar(leitura, modulos):
     if len(alertas) >= 2:
         criticos.append("multiplos_alertas")
 
-    # CRITICO = modulo_falho OR (count_alertas >= 2) OR (radiacao > 1.0 AND NOT comunicacao)
-    radiacao_critica = leitura["radiacao_msv"] > 1.0
-    sem_comunicacao  = not modulos["comunicacao"]["status"]
-    if radiacao_critica and sem_comunicacao:
-        criticos.append("radiacao_critica")
-
     if criticos:
         return "CRITICO", alertas, criticos
     elif alertas:
@@ -294,6 +288,7 @@ def exibir_diagnostico_e_recomendacoes(leitura, modulos):
 
 
 def exibir_previsao(lista_bateria):
+
     a, b, previsoes = prever_bateria(lista_bateria)
 
     print(f"\n--- PREVISAO DE BATERIA (proximos 2 dias / 12 leituras) ---")
@@ -326,28 +321,47 @@ def exibir_previsao(lista_bateria):
         print(f"\n  Bateria prevista dentro dos limites normais nas proximas 48h")
 
 
+def analisar_inconsistencia(dados, limite_solar=200):
+    inconsistencias = [(i, d) for i, d in enumerate(dados) if d["geracao_solar_kwh"] > limite_solar]
+ 
+    print(f"\n--- ANALISE DE INCONSISTENCIA ---")
+    if not inconsistencias:
+        print(f"  Nenhuma inconsistencia detectada nos dados de geracao solar.")
+        return
+ 
+    for i, d in inconsistencias:
+        print(f"  Linha {i + 2} | {d['datetime']}")
+        print(f"  Geracao solar registrada : {d['geracao_solar_kwh']} kWh")
+        print(f"  Capacidade maxima realista: ~200 kWh (horario de pico)")
+        print(f"  Anomalia: valor {d['geracao_solar_kwh'] / 200:.0f}x acima do maximo esperado")
+        print(f"  Causa provavel: falha ou descalibracao do sensor de geracao solar")
+        print(f"  [ALERTA] Inconsistencia detectada -> recalibracao de sensor iniciada")
+
+
 if __name__ == "__main__":
     dados = carregar_dados(CAMINHO_CSV)
     print(f"Leituras carregadas: {len(dados)}")
-
+ 
     (lista_geracao, lista_consumo, lista_bateria, lista_radiacao, lista_temp_int,
      modulos, hierarquia, fila_alertas, pilha_criticos, matriz_24h) = organizar_estruturas(dados)
-
+ 
     print(f"\n--- MODULOS ---")
     for k, v in modulos.items():
         print(f"  {v['nome']}: {'OK' if v['status'] else 'FALHA'} | Falhas historicas: {v['total_falhas']}")
-
+ 
     exibir_alertas_recentes(fila_alertas, n=10)
-
+ 
     print(f"\n--- PILHA DE CRITICOS (topo = mais recente) ---")
     for c in pilha_criticos[-3:]:
         motivo = RECOMENDACOES.get(c["motivos"][0])
         print(f"  {c['datetime']} - {motivo[1] if motivo else c['motivos'][0]}")
-
+ 
     exibir_diagnostico_e_recomendacoes(dados[-1], modulos)
-
+ 
     exibir_previsao(lista_bateria)
-
+ 
+    analisar_inconsistencia(dados)
+ 
     print(f"\n--- MATRIZ 24H ---")
     print(f"  {'datetime':<18} {'solar':>8} {'consumo':>8} {'bateria':>8} {'t_int':>7} {'rad':>7}")
     for linha in matriz_24h:
